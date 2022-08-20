@@ -231,7 +231,6 @@ class MDCA:
         for i in range(K):
 
             ti_opt = t[i].value 
-            # t_opt.append(ti_opt)
 
             ti_1 = ti_opt
             ti_2 = np.append(np.zeros(1) ,ti_opt[:-1] )
@@ -239,9 +238,9 @@ class MDCA:
             vi_opt = d[i] / ( ti_1 - ti_2)
             
             (self.UAVs[i]).v_set = vi_opt
-            
-            # v_opt.append(vk_opt)
+
 
             self.UAVs[i].t = ti_opt
+            self.UAVs[i].del_t = ti_1 - ti_2
             self.UAVs[i].v = vi_opt
 

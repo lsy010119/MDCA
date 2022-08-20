@@ -14,6 +14,7 @@ class UAV:
 
         self.d = []                 # distance between wpi,wpi+1 
         self.t = []                 # time at wpi
+        self.del_t = []             # time intervals between wpi,wpi+1
         self.v = []                 # velo city at wpi ~ wpi+1
 
         self.traj = None            # trajcetory of the uav
@@ -36,25 +37,25 @@ class UAV:
             wp_k1 = self.wp[k]
             wp_k2 = self.wp[k+1]
 
-            del_xk = ( wp_k2[0] - wp_k1[0] ) / ( self.t[k] / delt )
-            del_yk = ( wp_k2[1] - wp_k1[1] ) / ( self.t[k] / delt )
+            del_xk = ( wp_k2[0] - wp_k1[0] ) / ( self.del_t[k] / delt )
+            del_yk = ( wp_k2[1] - wp_k1[1] ) / ( self.del_t[k] / delt )
 
 
             if del_xk != 0 and del_yk == 0: # for case moving horizontally
 
-                traj_xk = np.arange( wp_k1[0], wp_k2[0], del_xk ) + wp_k1[0]
+                traj_xk = np.arange( wp_k1[0], wp_k2[0], del_xk ) 
                 traj_yk = np.zeros(len(traj_xk)) + wp_k1[1]
 
 
             elif del_xk == 0 and del_yk != 0: # for case moving vertically
 
-                traj_yk = np.arange( wp_k1[1], wp_k2[1], del_yk ) + wp_k1[1]
+                traj_yk = np.arange( wp_k1[1], wp_k2[1], del_yk ) 
                 traj_xk = np.zeros(len(traj_yk)) + wp_k1[0]
 
 
             else: # for other cases
-                traj_xk = np.arange( wp_k1[0], wp_k2[0], del_xk ) + wp_k1[0]
-                traj_yk = np.arange( wp_k1[1], wp_k2[1], del_yk ) + wp_k1[1]
+                traj_xk = np.arange( wp_k1[0], wp_k2[0], del_xk ) 
+                traj_yk = np.arange( wp_k1[1], wp_k2[1], del_yk ) 
 
 
             traj_k = np.vstack(( traj_xk, traj_yk ))
