@@ -50,6 +50,11 @@ class Simulator:
 
 
 
+    def visuallize(self):
+        
+        for uav in self.UAVs
+
+
     def run(self):
 
         self.mdca.run(avoidance=True)
