@@ -2,9 +2,6 @@ import numpy as np
 
 
 
-
-
-
 class UAV:
 
     def __init__(self, k, waypoints):
