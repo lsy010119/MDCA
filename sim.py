@@ -10,3 +10,9 @@ import time
 
 from mpl_toolkits.mplot3d import axes3d, Axes3D
 from matplotlib.axes import Axes
+
+class Simulator:
+
+    def __init__(self, delt, UAVs, visuallize=True):
+
+        
