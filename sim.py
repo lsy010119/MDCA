@@ -50,6 +50,9 @@ class Simulator:
 
 
 
+    def visuallize(self):
+        
+
 
     def run(self):
 
