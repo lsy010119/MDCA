@@ -50,6 +50,10 @@ class Simulator:
 
 
 
+    def visuallize(self):
+        
+
+
     def run(self):
 
         self.mdca.run(avoidance=True)
