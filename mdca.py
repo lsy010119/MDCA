@@ -213,7 +213,7 @@ class MDCA:
                 tj_c = (dj_c/dj_m)*(tj_m2-tj_m1) + tj_m1
 
                 ### Case 1 : ti_c > tj_c ###
-                if di_c > dj_c:
+                if di_n > dj_m:
 
                     const += [ t_safety - ti_c + tj_c <= 0 ]
 
