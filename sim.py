@@ -6,14 +6,24 @@ import cvxpy as cp
 import time
 # matplotlib.rcParams['text.usetex'] = True
 
-from lib.uav import UAV
+from uav import UAV
+from mdca import MDCA
 from mpl_toolkits.mplot3d import axes3d, Axes3D
 from matplotlib.axes import Axes
 
 
 
 class Simulator:
+    '''
+    Notations
 
+    K   : total number of uavs
+    i,j : index of two arbitrary uav
+
+    N : total number of waypoints of each uav
+    k : index of an waypoint
+
+    '''
 
     def __init__(self, delt, UAVs, v_min, v_max, d_safe, visuallize = True):
         
@@ -29,9 +39,9 @@ class Simulator:
 
         self.traj = {}
 
-        self.total_time = -1
+        self.total_time = 0
         
-        self.solver = Solver(delt,UAVs,v_min,v_max, d_safe)
+        self.mdca = MDCA(UAVs,v_min,v_max,d_safe)
 
         self.UAVs = UAVs # list of UAVs
 
@@ -39,38 +49,13 @@ class Simulator:
 
 
 
-    def calculate_trajec(self,uav):
-
-        traj = np.zeros((2,1))
-
-        for i in range(uav.n - 1):
-
-            wp_i1 = uav.wp[i]
-            wp_i2 = uav.wp[i+1]
-
-            del_xi = ( wp_i2[0] - wp_i1[0] ) / ( uav.t[i] / self.delt )
-            del_yi = ( wp_i2[1] - wp_i1[1] ) / ( uav.t[i] / self.delt )
-
-            traj_xi = np.arange( wp_i1[0], wp_i2[0], del_xi ) + wp_i1[0]
-            traj_yi = np.arange( wp_i1[1], wp_i2[1], del_yi ) + wp_i1[1]
-
-            traj_i = np.vstack(( traj_xi, traj_yi ))
-
-            traj = np.hstack((traj,traj_i))
-
-        traj = traj[:,1:]
-
-        uav.traj = traj
-        
-
-
     def run(self):
 
-        self.solver.run()
+        self.mdca.run(avoidance=True)
 
         for uav in self.UAVs:
 
-            self.calculate_trajec(uav)
+            uav.calculate_trajec(self.delt)
 
         if self.visuallize:
 
@@ -98,5 +83,5 @@ if __name__ == "__main__":
     
     UAVs = [uav1,uav2]
 
-    SIM = Simulator(0.1,UAVs,0,0,0)
+    SIM = Simulator(0.1,UAVs,3,5,1)
     SIM.run()
