@@ -110,7 +110,7 @@ class Simulator:
             uav_position.set_data(traj_x,traj_y)
         
         sim = FuncAnimation(fig=fig1, func=update, frames=total_timesteps, interval=0.1) 
-
+        
         traj.legend()
         plt.show()
 
@@ -132,23 +132,54 @@ class Simulator:
 
 if __name__ == "__main__":
 
+    '''senario #1'''
+    # wp1 = np.array([[0,0], [10,10]])
+    # wp2 = np.array([[0,10], [10,0]])
 
-    wp1 = np.array([[0,0], [6,5], [8,8], [15,0]])
-    wp2 = np.array([[0,5], [4,0], [9,3], [15,5]])
-    wp3 = np.array([[15,3], [6,0], [3,6], [0,2]])
+    # uav1 = UAV(1,wp1)
+    # uav2 = UAV(2,wp2)
 
+    # UAVs = [uav1,uav2]
+
+
+    '''senario #2'''
     # wp1 = np.array([[0,0], [4,0], [4,5], [10,5]])
     # wp2 = np.array([[0,6], [3,6], [3,1], [10,1]])
 
-    # wp1 = np.array([[0,0], [10,10]])
-    # wp2 = np.array([[0,10], [10,0]])
+    # uav1 = UAV(1,wp1)
+    # uav2 = UAV(2,wp2)
+
+    # UAVs = [uav1,uav2]
+
+
+    '''senario #3'''
+    wp1 = np.array([[0,0], [15,15]])
+    wp2 = np.array([[0,3], [15,3]])
+    wp3 = np.array([[0,6], [15,6]])
+    wp4 = np.array([[0,9], [15,9]])
+    wp5 = np.array([[0,12], [15,12]])
 
     uav1 = UAV(1,wp1)
     uav2 = UAV(2,wp2)
     uav3 = UAV(3,wp3)
+    uav4 = UAV(3,wp4)
+    uav5 = UAV(3,wp5)
 
+    UAVs = [uav1,uav2,uav3,uav4,uav5]
+
+
+    '''senario #4'''
+    # wp1 = np.array([[0,0], [6,5], [8,8], [15,0]])
+    # wp2 = np.array([[0,5], [4,1], [9,3], [15,5]])
+    # wp3 = np.array([[0,9], [5,6], [6,0], [15,3]])
+
+    # uav1 = UAV(1,wp1)
+    # uav2 = UAV(2,wp2)
+    # uav3 = UAV(3,wp3)
+    # uav4 = UAV(3,wp3)
+
+    # UAVs = [uav1,uav2,uav3]
     
-    UAVs = [uav1,uav2,uav3]
 
-    SIM = Simulator(0.01,UAVs,1,10,2)
+    SIM = Simulator(0.01,UAVs,5,10,2)
     SIM.run()

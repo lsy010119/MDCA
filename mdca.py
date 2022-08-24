@@ -209,11 +209,11 @@ class MDCA:
                 t_safety = (self.d_safe/dj_m)*(tj_m2-tj_m1)
 
                 ### ti_c, tj_c definition ###
-                ti_c = (di_c/di_n)*(ti_n2-ti_n1) + ti_n1
-                tj_c = (dj_c/dj_m)*(tj_m2-tj_m1) + tj_m1
+                ti_c = (di_c/di_n)*(ti_n2-ti_n1) 
+                tj_c = (dj_c/dj_m)*(tj_m2-tj_m1) 
 
                 ### Case 1 : ti_c > tj_c ###
-                if di_n > dj_m:
+                if di_n/di_c > dj_m/dj_c:
 
                     const += [ t_safety - ti_c + tj_c <= 0 ]
 
