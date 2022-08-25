@@ -25,7 +25,7 @@ class Simulator:
 
     '''
 
-    def __init__(self, delt, UAVs, v_min, v_max, d_safe, viz = True):
+    def __init__(self, delt, UAVs, v_min, v_max, d_safe, avoidance=True, viz = [True,True,True]):
         
         self.delt = delt
 
@@ -41,26 +41,13 @@ class Simulator:
 
         self.viz = viz
 
+        self.avoidance = avoidance
+
 
 
 
     def visuallize(self):
         
-        fig1 = plt.figure("Trajectory")
-        # fig2 = plt.figure("Relative Distances")
-        # fig3 = plt.figure("Velocity Data")
-
-        ''' Trajectory Plot '''
-
-        traj = fig1.add_subplot(1,1,1)
-
-        # traj.set_title(r"$\bf figure 1$  UAV trajectory")
-        traj.set_xlabel(r"$\bf x(m)$",fontsize=10)
-        traj.set_ylabel(r"$\bf y(m)$",fontsize=10)
-        traj.set_xlim(-1,11)
-        traj.set_ylim(-1,11)
-
-
 
         t_set = []
         uav_pose_xmax = []
@@ -77,10 +64,6 @@ class Simulator:
             uav_pose_ymin.append(np.min(uav.traj[1]))
 
         total_timesteps = max(t_set)
-        traj.set_xlim(min(uav_pose_xmin),max(uav_pose_xmax))
-        traj.set_ylim(min(uav_pose_ymin),max(uav_pose_ymax))
-        traj.axis('equal')
-
 
         for uav in self.UAVs:
 
@@ -92,33 +75,133 @@ class Simulator:
             traj_expanded[1] = np.hstack((uav.traj[1],uav.traj[1,-1]*np.ones(waiting_time)))
 
             uav.traj = traj_expanded
+
+
+        if self.viz[0]:
+
+            fig1 = plt.figure("Trajectory")
+
+            ''' Trajectory Plot '''
+
+            traj = fig1.add_subplot(1,1,1)
+
+            traj.set_title(r"$\bf figure 1$  UAV trajectory")
+            traj.set_xlabel(r"$\bf x(m)$",fontsize=10)
+            traj.set_ylabel(r"$\bf y(m)$",fontsize=10)
+            traj.set_xlim(-1,11)
+            traj.set_ylim(-1,11)
+
+            traj.set_xlim(min(uav_pose_xmin),max(uav_pose_xmax))
+            traj.set_ylim(min(uav_pose_ymin),max(uav_pose_ymax))
+            traj.grid()
+            traj.axis('equal')
+
+
+            for uav in self.UAVs:
+                
+                traj.plot(uav.traj[0],uav.traj[1],'--',label=r'$UAV^{(%d)}$'%(uav.num))
+
+
+            uav_position = traj.plot([],[],'k*',markersize=10)[0]
+
+
+            def update(timestep):
+
+                traj_x = []
+                traj_y = []
+
+                for uav in self.UAVs:
+
+                    traj_x.append(uav.traj[0,timestep])
+                    traj_y.append(uav.traj[1,timestep])
+
+                uav_position.set_data(traj_x,traj_y)
             
-            traj.plot(uav.traj[0],uav.traj[1],'--',label=r'$UAV^{(%d)}$'%(uav.num))
 
-        uav_position = traj.plot([],[],'k*',markersize=10)[0]
+            sim = FuncAnimation(fig=fig1, func=update, frames=total_timesteps, interval=0.1) 
+            # sim.save('Senario3_MDCA.gif', fps=30, dpi=100)
 
-        def update(timestep):
+            traj.legend()
 
-            traj_x = []
-            traj_y = []
+
+        if self.viz[1]:
+            
+            fig2 = plt.figure("Relative Distances")
+
+            ''' Relative Position Plot '''
+
+            rel = fig2.add_subplot(1,1,1)
+
+            rel.set_title(r"$\bf figure 2$  Relative Position")
+            rel.set_xlabel(r"$\bf time\;(s)$",fontsize=10)
+            rel.set_ylabel(r"$\bf Relative\;Distance\;(m)$",fontsize=10)
+                
+
+            for i in range(len(self.UAVs)):
+                for j in range(len(self.UAVs) - i - 1):
+
+                    rel.plot( np.arange(0,total_timesteps,1), \
+                              np.linalg.norm(self.UAVs[i].traj-self.UAVs[i+j+1].traj,2,axis=0),'-',\
+                              color = np.random.rand(3,) ,\
+                              label=r'$UAV^{(%d)}$ & $UAV^{(%d)}$'%(self.UAVs[i].num,self.UAVs[j+i+1].num))
+
+
+            rel.hlines( self.d_safe, 0, total_timesteps, label=r"$d_{safety}$")
+            rel.legend()
+
+
+        if self.viz[2]:
+
+            fig3 = plt.figure("Velocity Data")
+
 
             for uav in self.UAVs:
 
-                traj_x.append(uav.traj[0,timestep])
-                traj_y.append(uav.traj[1,timestep])
+                vel = fig3.add_subplot(len(self.UAVs),1,uav.num)
+                vel.set_ylim(self.v_min-2,self.v_max+2)
+                vel.set_xlim(0, total_timesteps*self.delt)
 
-            uav_position.set_data(traj_x,traj_y)
-        
-        sim = FuncAnimation(fig=fig1, func=update, frames=total_timesteps, interval=0.1) 
-        
-        traj.legend()
+                vel.set_title(r"$\bf UAV^{(%d)}$"%(uav.num), loc="left",fontsize=10)
+                vel.set_xlabel(r"$time\;(s)$",fontsize=10)
+                vel.set_ylabel(r"$Velocity\;(m/s)$",fontsize=10)
+
+
+                t_set = uav.t 
+                v_set = uav.v 
+
+                for i in range(len(t_set)):
+    
+                    try:
+
+                        t_set = np.insert(t_set,2*i,t_set[2*i])
+                        v_set = np.insert(v_set,2*i,v_set[2*i])
+
+                    except:
+                        
+                        pass
+
+
+                t_set = t_set[:-1]
+                t_set = np.insert(t_set,0,0)
+
+                if t_set[-1] < total_timesteps*self.delt:
+
+                    t_set = np.append( t_set, np.array([t_set[-1],total_timesteps*self.delt]) )
+                    v_set = np.append( v_set, np.array([0,0]) )
+ 
+                vel.hlines(self.v_max, 0, t_set[-1], color="red", linestyles='--', label="Max velocity")
+                vel.hlines(self.v_min, 0, t_set[-1], color="green", linestyles='--', label="Min velocity")
+                vel.plot(t_set, v_set, color="black", linewidth=2, label="Velocity")
+                vel.legend(loc='lower left')
+                vel.grid()
+
         plt.show()
 
 
 
     def run(self):
 
-        self.mdca.run(avoidance=True)
+        self.mdca.run(avoidance=self.avoidance)
 
         for uav in self.UAVs:
 
@@ -142,9 +225,10 @@ if __name__ == "__main__":
     # UAVs = [uav1,uav2]
 
 
-    '''senario #2'''
-    # wp1 = np.array([[0,0], [4,0], [4,5], [10,5]])
-    # wp2 = np.array([[0,6], [3,6], [3,1], [10,1]])
+
+    '''test #1'''
+    # wp1 = np.array([[0,0], [18,0], [20,10]])
+    # wp2 = np.array([[0,10], [5,10], [10,10], [18,10], [20,0]])
 
     # uav1 = UAV(1,wp1)
     # uav2 = UAV(2,wp2)
@@ -152,20 +236,31 @@ if __name__ == "__main__":
     # UAVs = [uav1,uav2]
 
 
-    '''senario #3'''
-    wp1 = np.array([[0,0], [15,15]])
-    wp2 = np.array([[0,3], [15,3]])
-    wp3 = np.array([[0,6], [15,6]])
-    wp4 = np.array([[0,9], [15,9]])
-    wp5 = np.array([[0,12], [15,12]])
+
+    '''senario #2'''
+    wp1 = np.array([[0,0], [4,3], [6,4], [9,5], [11,6], [14,7], [15,7]])
+    wp2 = np.array([[0,9], [3,8], [7,5], [13,3], [15,2]])
 
     uav1 = UAV(1,wp1)
     uav2 = UAV(2,wp2)
-    uav3 = UAV(3,wp3)
-    uav4 = UAV(3,wp4)
-    uav5 = UAV(3,wp5)
 
-    UAVs = [uav1,uav2,uav3,uav4,uav5]
+    UAVs = [uav1,uav2]
+
+
+    '''senario #3'''
+    # wp1 = np.array([[0,0], [15,15]])
+    # wp2 = np.array([[0,3], [15,3]])
+    # wp3 = np.array([[0,6], [15,6]])
+    # wp4 = np.array([[0,9], [15,9]])
+    # wp5 = np.array([[0,12], [15,12]])
+
+    # uav1 = UAV(1,wp1)
+    # uav2 = UAV(2,wp2)
+    # uav3 = UAV(3,wp3)
+    # uav4 = UAV(3,wp4)
+    # uav5 = UAV(3,wp5)
+
+    # UAVs = [uav1,uav2,uav3,uav4,uav5]
 
 
     '''senario #4'''
@@ -180,6 +275,11 @@ if __name__ == "__main__":
 
     # UAVs = [uav1,uav2,uav3]
     
-
-    SIM = Simulator(0.01,UAVs,5,10,2)
+    ### visualize ###
+    Traj=False
+    Reldist=False
+    Vel=True
+    #################
+    
+    SIM = Simulator(0.01,UAVs,1,10,3,avoidance=True,viz=[Traj,Reldist,Vel])
     SIM.run()

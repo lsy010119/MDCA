@@ -203,6 +203,10 @@ class MDCA:
                     dj_m = self.UAVs[j].d[jk+1]     # d^j_m   : d_m of j'th uav
                     dj_c = indexes[5]               # d^j_c   : d_col of j'th uav                
 
+                # total distance from start point to collision point
+                sum_di_c = np.sum(self.UAVs[i].d[:ik])+di_c
+                sum_dj_c = np.sum(self.UAVs[j].d[:jk])+dj_c
+
 
                 ### t_safety definition ###
                 t_safety = (self.d_safe/di_n)*(ti_n2-ti_n1)
@@ -211,14 +215,21 @@ class MDCA:
                 ### ti_c, tj_c definition ###
                 ti_c = (di_c/di_n)*(ti_n2-ti_n1) 
                 tj_c = (dj_c/dj_m)*(tj_m2-tj_m1) 
+                
 
                 ### Case 1 : ti_c > tj_c ###
-                if di_n/di_c > dj_m/dj_c:
+                if sum_di_c >= sum_dj_c:
+
+                    # print(f"t{i}_c > t{j}_c")
+                    # print(f"d{i}_{ik} : {di_n} \nd{j}_{jk} : {dj_m}")
 
                     const += [ t_safety - ti_c + tj_c <= 0 ]
 
                 ### Case 2 : ti_c < tj_c ###
                 else:
+
+                    # print(f"t{i}_c < t{j}_c")
+                    # print(f"d{i}_{ik} : {di_n} \nd{j}_{jk} : {dj_m}")
 
                     const += [ t_safety + ti_c - tj_c <= 0 ]        
 
