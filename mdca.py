@@ -177,6 +177,9 @@ class MDCA:
                     di_n = self.UAVs[i].d[0]        # d^i_1   : d_0 of i'th uav
                     di_c = indexes[4]               # d^i_c   : d_col of i'th uav
 
+                    sum_di_c = self.UAVs[i].d[0] + di_c
+                    # print(f"sum_di_c : {sum_di_c}")
+
                 else:
                     ti = t[i]                       # t^i     : t set of i'th uav
                     ti_n1 = ti[ik]                  # t^i_n   : t_n of i'th uav
@@ -184,6 +187,9 @@ class MDCA:
 
                     di_n = self.UAVs[i].d[ik+1]     # d^i_n   : d_n of i'th uav
                     di_c = indexes[4]               # d^i_c   : d_col of i'th uav
+
+                    sum_di_c = np.sum(self.UAVs[i].d[:ik+1]) + di_c
+                    # print(f"sum_di_c : {sum_di_c}")
 
                 if jk < 0:
 
@@ -194,6 +200,9 @@ class MDCA:
                     dj_m = self.UAVs[j].d[0]        # d^j_m   :  d_0 of j'th uav
                     dj_c = indexes[5]               # d^j_c   :  d_col of j'th uav
 
+                    sum_dj_c = self.UAVs[j].d[0] + dj_c
+                    # print(f"sum_dj_c : {sum_dj_c}")
+
                 else:
 
                     tj = t[j]                       # t^j     : t set of j'th uav
@@ -203,36 +212,60 @@ class MDCA:
                     dj_m = self.UAVs[j].d[jk+1]     # d^j_m   : d_m of j'th uav
                     dj_c = indexes[5]               # d^j_c   : d_col of j'th uav                
 
-                # total distance from start point to collision point
-                sum_di_c = np.sum(self.UAVs[i].d[:ik])+di_c
-                sum_dj_c = np.sum(self.UAVs[j].d[:jk])+dj_c
+                    sum_dj_c = np.sum(self.UAVs[j].d[:jk+1]) + dj_c
+                    # print(f"sum_dj_c : {sum_dj_c}")
 
+                # total distance from start point to collision point
 
                 ### t_safety definition ###
                 t_safety = (self.d_safe/di_n)*(ti_n2-ti_n1)
                 t_safety = (self.d_safe/dj_m)*(tj_m2-tj_m1)
 
                 ### ti_c, tj_c definition ###
-                ti_c = (di_c/di_n)*(ti_n2-ti_n1) 
-                tj_c = (dj_c/dj_m)*(tj_m2-tj_m1) 
+                ti_c = (di_c/di_n)*(ti_n2-ti_n1) + ti_n1
+                tj_c = (dj_c/dj_m)*(tj_m2-tj_m1) + tj_m1
                 
 
-                ### Case 1 : ti_c > tj_c ###
-                if sum_di_c >= sum_dj_c:
 
-                    # print(f"t{i}_c > t{j}_c")
-                    # print(f"d{i}_{ik} : {di_n} \nd{j}_{jk} : {dj_m}")
+                
+                ### Case 1 : ti_c > tj_c ###
+                if ( sum_di_c >= sum_dj_c ) and ( di_n <= dj_m ):
+
+                    # print(f"t{i+1}_c > t{j+1}_c")
+                    # print(f"d{i+1}_{ik} : {di_n} \nd{j+1}_{jk} : {dj_m}")
+                    # print(f"d{i+1}_c : {sum_di_c} \nd{j+1}_c : {sum_dj_c}")
 
                     const += [ t_safety - ti_c + tj_c <= 0 ]
 
+
                 ### Case 2 : ti_c < tj_c ###
-                else:
+                elif ( sum_di_c >= sum_dj_c ) and ( di_n > dj_m ):
 
-                    # print(f"t{i}_c < t{j}_c")
-                    # print(f"d{i}_{ik} : {di_n} \nd{j}_{jk} : {dj_m}")
+                    # print(f"t{i+1}_c > t{j+1}_c")
+                    # print(f"d{i+1}_{ik} : {di_n} \nd{j+1}_{jk} : {dj_m}")
+                    # print(f"d{i+1}_c : {sum_di_c} \nd{j+1}_c : {sum_dj_c}")
 
-                    const += [ t_safety + ti_c - tj_c <= 0 ]        
+                    const += [ t_safety + ti_c - tj_c <= 0 ]
 
+
+                ### Case 1 : ti_c > tj_c ###
+                if ( sum_di_c <= sum_dj_c ) and ( di_n <= dj_m ):
+
+                    # print(f"t{i+1}_c > t{j+1}_c")
+                    # print(f"d{i+1}_{ik} : {di_n} \nd{j+1}_{jk} : {dj_m}")
+                    # print(f"d{i+1}_c : {sum_di_c} \nd{j+1}_c : {sum_dj_c}")
+
+                    const += [ t_safety - ti_c + tj_c <= 0 ]
+
+
+                ### Case 2 : ti_c < tj_c ###
+                elif ( sum_di_c <= sum_dj_c ) and ( di_n > dj_m ):
+
+                    # print(f"t{i+1}_c > t{j+1}_c")
+                    # print(f"d{i+1}_{ik} : {di_n} \nd{j+1}_{jk} : {dj_m}")
+                    # print(f"d{i+1}_c : {sum_di_c} \nd{j+1}_c : {sum_dj_c}")
+
+                    const += [ t_safety + ti_c - tj_c <= 0 ]
 
 
         ''' Solve '''
