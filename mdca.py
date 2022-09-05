@@ -90,7 +90,7 @@ class MDCA:
 
 
 
-    def run(self, avoidance=True):
+    def run(self, avoidance=True, simul_arr=True):
 
         K = len(self.UAVs)              # total number of uavs
 
@@ -118,6 +118,19 @@ class MDCA:
             N.append(uav.N)                        # N = [N^1, N^2, ... , N^K]
 
             obj += ti[-1]                          # cost = Sum of arrival time of UAVs
+
+        if simul_arr: # additional cost function : simultaneus arrival cost
+
+            for i in range(K):
+                for j in range(K-i-1):
+
+                    t_arr_i = t[i] 
+                    t_arr_j = t[i+j+1]
+
+                    obj += cp.norm(t_arr_i[-1] - t_arr_j[-1])   # cost = sum( |t_i - t_j|^2 )
+
+
+
 
         
 
