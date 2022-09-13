@@ -125,9 +125,10 @@ class Simulator:
             
 
             sim = FuncAnimation(fig=fig1, func=update, frames=total_timesteps, interval=0.1) 
-            sim.save('Senario4_simarr_MDCA.gif', fps=30, dpi=100)
+            sim.save('Senario3_simarr_MDCA.gif', fps=30, dpi=50)
 
             traj.legend()
+            plt.show()
 
 
         if self.viz[1]:
@@ -154,11 +155,12 @@ class Simulator:
 
             rel.hlines( self.d_safe, 0, total_timesteps, label=r"$d_{safety}$")
             rel.legend()
+            plt.show()
 
 
         if self.viz[2]:
 
-            fig3 = plt.figure("Velocity Data")
+            fig3 = plt.figure("Velocity Data",figsize=(20,20))
 
 
             for uav in self.UAVs:
@@ -167,9 +169,9 @@ class Simulator:
                 vel.set_ylim(self.v_min-2,self.v_max+2)
                 vel.set_xlim(0, total_timesteps*self.delt)
 
-                vel.set_title(r"$\bf UAV^{(%d)}$"%(uav.num), loc="left",fontsize=10)
-                vel.set_xlabel(r"$time\;(s)$",fontsize=10)
-                vel.set_ylabel(r"$Velocity\;(m/s)$",fontsize=10)
+                vel.set_title(r"$\bf UAV^{(%d)}$"%(uav.num), loc="right",fontsize=30)
+                vel.set_xlabel(r"$\bf time\;(s)$",fontsize=20)
+                vel.set_ylabel(r"$\bf Velocity\;(m/s)$",fontsize=30)
 
 
                 t_set = uav.t 
@@ -195,13 +197,14 @@ class Simulator:
                     t_set = np.append( t_set, np.array([t_set[-1],total_timesteps*self.delt]) )
                     v_set = np.append( v_set, np.array([0,0]) )
  
-                vel.hlines(self.v_max, 0, t_set[-1], color="red", linestyles='--', label="Max velocity")
-                vel.hlines(self.v_min, 0, t_set[-1], color="green", linestyles='--', label="Min velocity")
-                vel.plot(t_set, v_set, color="black", linewidth=2, label="Velocity")
-                vel.legend(loc='lower left')
+                vel.hlines(self.v_max, 0, t_set[-1], color="red", linewidth=6, linestyles='--', label=r"Max velocity")
+                vel.hlines(self.v_min, 0, t_set[-1], color="green", linewidth=6, linestyles='--', label=r"Min velocity")
+                vel.plot(t_set, v_set, color="black", linewidth=4, label=r"Velocity")
+                vel.legend(loc='lower left',prop={'size':20})
                 vel.grid()
 
-        plt.show()
+            plt.savefig("vel",dpi=300)
+            plt.show()
 
 
 
@@ -255,29 +258,29 @@ if __name__ == "__main__":
 
 
     '''senario #3'''
-    # wp1 = np.array([[0,0], [6,5], [8,8], [15,0]])
-    # wp2 = np.array([[0,5], [4,1], [9,3], [15,5]])
-    # wp3 = np.array([[0,9], [5,6], [6,0], [15,3]])
-
-    # uav1 = UAV(1,wp1)
-    # uav2 = UAV(2,wp2)
-    # uav3 = UAV(3,wp3)
-
-    # UAVs = [uav1,uav2,uav3]
-
-
-    '''senario #4'''
-    wp1 = np.array([[0,0], [2,0.5], [3,1], [5,4], [6,6], [8,7.5], [10,8], [12,8.2]])
-    wp2 = np.array([[0,3], [4,2], [5,1.5], [6,1.5], [7,2], [8,3], [12,6]])
-    wp3 = np.array([[0,9], [4,6], [8,1], [10,0.5], [12,1]])
-    wp4 = np.array([[0,6], [4,4], [10,2], [12,2]])
+    wp1 = np.array([[0,0], [6,5], [8,8], [15,0]])
+    wp2 = np.array([[0,5], [4,1], [9,3], [15,5]])
+    wp3 = np.array([[0,9], [5,6], [6,0], [15,3]])
 
     uav1 = UAV(1,wp1)
     uav2 = UAV(2,wp2)
     uav3 = UAV(3,wp3)
-    uav4 = UAV(4,wp4)
 
-    UAVs = [uav1,uav2,uav3,uav4]
+    UAVs = [uav1,uav2,uav3]
+
+
+    '''senario #4'''
+    # wp1 = np.array([[0,0], [2,0.5], [3,1], [5,4], [6,6], [8,7.5], [10,8], [12,8.2]])
+    # wp2 = np.array([[0,3], [4,2], [5,1.5], [6,1.5], [7,2], [8,3], [12,6]])
+    # wp3 = np.array([[0,9], [4,6], [8,1], [10,0.5], [12,1]])
+    # wp4 = np.array([[0,6], [4,4], [10,2], [12,2]])
+
+    # uav1 = UAV(1,wp1)
+    # uav2 = UAV(2,wp2)
+    # uav3 = UAV(3,wp3)
+    # uav4 = UAV(4,wp4)
+
+    # UAVs = [uav1,uav2,uav3,uav4]
 
 
     '''senario #5'''
@@ -307,7 +310,7 @@ if __name__ == "__main__":
     ### visualize ###
     Traj=True
     Reldist=False
-    Vel=False
+    Vel=True
     #################
     
     SIM = Simulator(0.01,UAVs,1,10,3,avoidance=True,simul_arr=True,viz=[Traj,Reldist,Vel])

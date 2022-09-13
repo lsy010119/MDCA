@@ -1,5 +1,12 @@
+from cmath import inf
+from matplotlib import projections
 import numpy as np
 import cvxpy as cp
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import axes3d, Axes3D
+from matplotlib.axes import Axes
+
 
 class MDCA:
 
@@ -90,6 +97,15 @@ class MDCA:
 
 
 
+
+    def constraints(self,x_c1,x_c2,x_safe):
+
+        return np.clip( np.abs(x_c1-x_c2)-x_safe ,0,inf) + x_safe
+            
+
+
+
+
     def run(self, avoidance=True, simul_arr=True):
 
         K = len(self.UAVs)              # total number of uavs
@@ -117,7 +133,7 @@ class MDCA:
             d.append(di)                           # d = [d^1, d^2, ... , d^K]
             N.append(uav.N)                        # N = [N^1, N^2, ... , N^K]
 
-            obj += ti[-1]                          # cost = Sum of arrival time of UAVs
+            obj += cp.sum_squares( ti[-1] )                      # cost = Sum of arrival time of UAVs
 
         if simul_arr: # additional cost function : simultaneus arrival cost
 
@@ -127,7 +143,7 @@ class MDCA:
                     t_arr_i = t[i] 
                     t_arr_j = t[i+j+1]
 
-                    obj += cp.norm(t_arr_i[-1] - t_arr_j[-1])   # cost = sum( |t_i - t_j|^2 )
+                    obj += 100* cp.abs(t_arr_i[-1] - t_arr_j[-1])   # cost = sum( |t_i - t_j|^2 )
 
 
 
@@ -164,6 +180,8 @@ class MDCA:
 
             ### check collision risk point ###
             collision_points = self.check_collision_point()   # set of collision points
+
+            x = []
             
             ### appending collision avoidance constraints ###
             for indexes, collision_point in collision_points.items():
@@ -190,7 +208,8 @@ class MDCA:
                     di_n = self.UAVs[i].d[0]        # d^i_1   : d_0 of i'th uav
                     di_c = indexes[4]               # d^i_c   : d_col of i'th uav
 
-                    sum_di_c = self.UAVs[i].d[0] + di_c
+                    # sum_di_c = self.UAVs[i].d[0] + di_c
+                    sum_di_c = np.sum(self.UAVs[i].d[:1])
                     # print(f"sum_di_c : {sum_di_c}")
 
                 else:
@@ -201,7 +220,8 @@ class MDCA:
                     di_n = self.UAVs[i].d[ik+1]     # d^i_n   : d_n of i'th uav
                     di_c = indexes[4]               # d^i_c   : d_col of i'th uav
 
-                    sum_di_c = np.sum(self.UAVs[i].d[:ik+1]) + di_c
+                    # sum_di_c = np.sum(self.UAVs[i].d[:ik+1]) + di_c
+                    sum_di_c = np.sum(self.UAVs[i].d[:ik+2])
                     # print(f"sum_di_c : {sum_di_c}")
 
                 if jk < 0:
@@ -213,7 +233,8 @@ class MDCA:
                     dj_m = self.UAVs[j].d[0]        # d^j_m   :  d_0 of j'th uav
                     dj_c = indexes[5]               # d^j_c   :  d_col of j'th uav
 
-                    sum_dj_c = self.UAVs[j].d[0] + dj_c
+                    # sum_dj_c = self.UAVs[j].d[0] + dj_c
+                    sum_dj_c = np.sum(self.UAVs[j].d[:jk+2])
                     # print(f"sum_dj_c : {sum_dj_c}")
 
                 else:
@@ -225,7 +246,8 @@ class MDCA:
                     dj_m = self.UAVs[j].d[jk+1]     # d^j_m   : d_m of j'th uav
                     dj_c = indexes[5]               # d^j_c   : d_col of j'th uav                
 
-                    sum_dj_c = np.sum(self.UAVs[j].d[:jk+1]) + dj_c
+                    # sum_dj_c = np.sum(self.UAVs[j].d[:jk+1]) + dj_c
+                    sum_dj_c = np.sum(self.UAVs[j].d[:jk+2])
                     # print(f"sum_dj_c : {sum_dj_c}")
 
                 # total distance from start point to collision point
@@ -237,48 +259,33 @@ class MDCA:
                 ### ti_c, tj_c definition ###
                 ti_c = (di_c/di_n)*(ti_n2-ti_n1) + ti_n1
                 tj_c = (dj_c/dj_m)*(tj_m2-tj_m1) + tj_m1
-                
 
 
-                
-                ### Case 1 : ti_c > tj_c ###
-                if ( sum_di_c >= sum_dj_c ) and ( di_n <= dj_m ):
-
-                    # print(f"t{i+1}_c > t{j+1}_c")
-                    # print(f"d{i+1}_{ik} : {di_n} \nd{j+1}_{jk} : {dj_m}")
-                    # print(f"d{i+1}_c : {sum_di_c} \nd{j+1}_c : {sum_dj_c}")
-
-                    const += [ t_safety - ti_c + tj_c <= 0 ]
+                ''' Approach #1 '''
+                # const += [ t_safety - ti_c + tj_c <= 0 ]
+                # const += [ t_safety + ti_c - tj_c <= 0 ]
 
 
-                ### Case 2 : ti_c < tj_c ###
-                elif ( sum_di_c >= sum_dj_c ) and ( di_n > dj_m ):
+                ''' Approach #2 '''
+                if sum_di_c >= sum_dj_c:
 
-                    # print(f"t{i+1}_c > t{j+1}_c")
-                    # print(f"d{i+1}_{ik} : {di_n} \nd{j+1}_{jk} : {dj_m}")
-                    # print(f"d{i+1}_c : {sum_di_c} \nd{j+1}_c : {sum_dj_c}")
+                    const += [ t_safety - (ti_c - tj_c) <= 0 ]
 
-                    const += [ t_safety + ti_c - tj_c <= 0 ]
+                else:
 
-
-                ### Case 1 : ti_c > tj_c ###
-                if ( sum_di_c <= sum_dj_c ) and ( di_n <= dj_m ):
-
-                    # print(f"t{i+1}_c > t{j+1}_c")
-                    # print(f"d{i+1}_{ik} : {di_n} \nd{j+1}_{jk} : {dj_m}")
-                    # print(f"d{i+1}_c : {sum_di_c} \nd{j+1}_c : {sum_dj_c}")
-
-                    const += [ t_safety - ti_c + tj_c <= 0 ]
+                    const += [ t_safety + (ti_c - tj_c) <= 0 ]
 
 
-                ### Case 2 : ti_c < tj_c ###
-                elif ( sum_di_c <= sum_dj_c ) and ( di_n > dj_m ):
+                ''' Approach #3 '''
+                # x_n = cp.Variable(1)
 
-                    # print(f"t{i+1}_c > t{j+1}_c")
-                    # print(f"d{i+1}_{ik} : {di_n} \nd{j+1}_{jk} : {dj_m}")
-                    # print(f"d{i+1}_c : {sum_di_c} \nd{j+1}_c : {sum_dj_c}")
+                # x.append(x_n)
 
-                    const += [ t_safety + ti_c - tj_c <= 0 ]
+                # const += [ cp.abs(ti_c - tj_c) <= (2**0.5)*x_n ]
+                # const += [ t_safety - x_n <= 0 ]
+                # const += [ x_n <= 100 ]
+
+
 
 
         ''' Solve '''
@@ -300,4 +307,97 @@ class MDCA:
             self.UAVs[i].t = ti_opt
             self.UAVs[i].del_t = ti_1 - ti_2
             self.UAVs[i].v = vi_opt
+
+        
+
+
+        ''' for printing result data '''
+
+        num = 0
+        collision_points = self.check_collision_point()   # set of collision points
+
+        print(f"==== Time differences at collision Points ====")
+
+        for indexes, collision_point in collision_points.items():
+            
+            # For the point where the i-th uav and j-th uav can collide.
+
+            # the i'th uav and j'th uav was coming from
+            # ik'th waypoint and j'th waypoint respectively
+
+            i =  indexes[0]             
+            j =  indexes[1]
+            ik = indexes[2]-1 # index of waypoint where i'th uav came from
+            jk = indexes[3]-1 # index of waypoint where j'th uav came from
+
+
+            # defining d^i_c and d^j_c
+
+            if ik < 0: # if i'th uav came from initial waypoint
+                
+                ti = self.UAVs[i].t             # t^i     : t set of i'th uav
+                ti_n1 = 0                       
+                ti_n2 = ti[0]                   # t^i_1   : t_0 of i'th uav                
+                
+                di_n = self.UAVs[i].d[0]        # d^i_1   : d_0 of i'th uav
+                di_c = indexes[4]               # d^i_c   : d_col of i'th uav
+
+                sum_di_c = self.UAVs[i].d[0] + di_c
+
+            else:
+                ti = self.UAVs[i].t             # t^i     : t set of i'th uav
+                ti_n1 = ti[ik]                  # t^i_n   : t_n of i'th uav
+                ti_n2 = ti[ik+1]                # t^i_n+1 : t_n+1 of i'th uav
+
+                di_n = self.UAVs[i].d[ik+1]     # d^i_n   : d_n of i'th uav
+                di_c = indexes[4]               # d^i_c   : d_col of i'th uav
+
+                sum_di_c = np.sum(self.UAVs[i].d[:ik+1]) + di_c
+
+            if jk < 0:
+
+                tj = self.UAVs[j].t             # t^j     :  t set of j'th uav
+                tj_m1 = 0                       
+                tj_m2 = tj[0]                   # t^j_m   :  t_0 of j'th uav
+
+                dj_m = self.UAVs[j].d[0]        # d^j_m   :  d_0 of j'th uav
+                dj_c = indexes[5]               # d^j_c   :  d_col of j'th uav
+
+                sum_dj_c = self.UAVs[j].d[0] + dj_c
+
+            else:
+
+                tj = self.UAVs[j].t             # t^j     : t set of j'th uav
+                tj_m1 = tj[jk]                  # t^j_m   : t_m of j'th uav
+                tj_m2 = tj[jk+1]                # t^j_m+1 : t_m+1 of j'th uav
+
+                dj_m = self.UAVs[j].d[jk+1]     # d^j_m   : d_m of j'th uav
+                dj_c = indexes[5]               # d^j_c   : d_col of j'th uav                
+
+                sum_dj_c = np.sum(self.UAVs[j].d[:jk+1]) + dj_c
+
+            # total distance from start point to collision point
+
+            ### t_safety definition ###
+            t_safety = (self.d_safe/di_n)*(ti_n2-ti_n1)
+            t_safety = (self.d_safe/dj_m)*(tj_m2-tj_m1)
+
+            ### ti_c, tj_c definition ###
+            ti_c = (di_c/di_n)*(ti_n2-ti_n1) + ti_n1
+            tj_c = (dj_c/dj_m)*(tj_m2-tj_m1) + tj_m1
+            
+
+            print(f"==== Collision Point of ( {i+1}th UAV, {j+1}th UAV ) ====")
+            print("Collision point arrival time difference | ti_c - tj_c | \n: ",abs(ti_c - tj_c))
+            print("t_safety calculated \n: ",t_safety)
+        
+            num += 1
+
+        print(f"==== Arrival time differences ====")
+
+        for i in range(K):
+            for j in range(K-i-1):
+
+                print(f" {i+1}th UAV, {i+j+2}th UAV : ",abs(self.UAVs[i].t[-1]-self.UAVs[i+j+1].t[-1]))
+
 
