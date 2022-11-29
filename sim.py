@@ -200,10 +200,11 @@ class Simulator:
                 vel.hlines(self.v_max, 0, t_set[-1], color="red", linewidth=6, linestyles='--', label=r"Max velocity")
                 vel.hlines(self.v_min, 0, t_set[-1], color="green", linewidth=6, linestyles='--', label=r"Min velocity")
                 vel.plot(t_set, v_set, color="black", linewidth=4, label=r"Velocity")
-                vel.legend(loc='lower left',prop={'size':20})
+                vel.legend(loc='lower left',prop={'size':25})
                 vel.grid()
-
-            plt.savefig("vel",dpi=300)
+                plt.tick_params(axis='both', which='major', labelsize=25)
+            
+            # plt.savefig("vel",dpi=300)
             plt.show()
 
 
@@ -262,6 +263,12 @@ if __name__ == "__main__":
     wp2 = np.array([[0,5], [4,1], [9,3], [15,5]])
     wp3 = np.array([[0,9], [5,6], [6,0], [15,3]])
 
+
+    # wp1 = np.array([[0,0], [2,1.5],[4,3],[6,5], [8,8],[10,5.5], [15,0]])
+    # wp2 = np.array([[0,5], [2,3],[4,1],[7,2.2], [9,3], [10,3.5],[13,4.5],[15,5]])
+    # wp3 = np.array([[0,9], [5,6],[5.5,3], [6,0],[11,1.7], [15,3]])
+
+
     uav1 = UAV(1,wp1)
     uav2 = UAV(2,wp2)
     uav3 = UAV(3,wp3)
@@ -310,7 +317,7 @@ if __name__ == "__main__":
     ### visualize ###
     Traj=True
     Reldist=False
-    Vel=True
+    Vel=False
     #################
     
     SIM = Simulator(0.01,UAVs,1,10,3,avoidance=True,simul_arr=True,viz=[Traj,Reldist,Vel])

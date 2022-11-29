@@ -10,6 +10,7 @@ from matplotlib.axes import Axes
 
 class MDCA:
 
+
     def __init__(self,UAVs,v_min,v_max,d_safe):
 
         self.UAVs = UAVs
@@ -19,6 +20,8 @@ class MDCA:
         
         self.d_safe = d_safe
 
+
+        self.fig = plt.figure()
 
 
     def check_intersection(self, wp1_1, wp1_2, wp2_1, wp2_2):
@@ -133,7 +136,7 @@ class MDCA:
             d.append(di)                           # d = [d^1, d^2, ... , d^K]
             N.append(uav.N)                        # N = [N^1, N^2, ... , N^K]
 
-            obj += cp.sum_squares( ti[-1] )                      # cost = Sum of arrival time of UAVs
+            obj +=  ti[-1]                      # cost = Sum of arrival time of UAVs
 
         if simul_arr: # additional cost function : simultaneus arrival cost
 
@@ -143,7 +146,7 @@ class MDCA:
                     t_arr_i = t[i] 
                     t_arr_j = t[i+j+1]
 
-                    obj += 100* cp.abs(t_arr_i[-1] - t_arr_j[-1])   # cost = sum( |t_i - t_j|^2 )
+                    obj += 100*cp.sum_squares(  (t_arr_i[-1] - t_arr_j[-1])  )   # cost = sum( |t_i - t_j|^2 )
 
 
 
@@ -289,7 +292,7 @@ class MDCA:
 
 
         ''' Solve '''
-        cp.Problem( cp.Minimize(obj), const ).solve(verbose=False)
+        cp.Problem( cp.Minimize(obj), const ).solve(solver=cp.ECOS, verbose=True)
 
     
         for i in range(K):
@@ -315,6 +318,10 @@ class MDCA:
 
         num = 0
         collision_points = self.check_collision_point()   # set of collision points
+
+
+        x_c1 = np.linspace(0,10)
+        x_c2 = np.linspace(0,10)
 
         print(f"==== Time differences at collision Points ====")
 
