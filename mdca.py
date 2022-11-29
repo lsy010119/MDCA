@@ -133,7 +133,7 @@ class MDCA:
             d.append(di)                           # d = [d^1, d^2, ... , d^K]
             N.append(uav.N)                        # N = [N^1, N^2, ... , N^K]
 
-            obj += cp.sum_squares( ti[-1] )                      # cost = Sum of arrival time of UAVs
+            obj +=  ti[-1]                      # cost = Sum of arrival time of UAVs
 
         if simul_arr: # additional cost function : simultaneus arrival cost
 
@@ -143,7 +143,7 @@ class MDCA:
                     t_arr_i = t[i] 
                     t_arr_j = t[i+j+1]
 
-                    obj += 100* cp.abs(t_arr_i[-1] - t_arr_j[-1])   # cost = sum( |t_i - t_j|^2 )
+                    obj += 100*cp.sum_squares(  (t_arr_i[-1] - t_arr_j[-1])  )   # cost = sum( |t_i - t_j|^2 )
 
 
 
@@ -289,7 +289,7 @@ class MDCA:
 
 
         ''' Solve '''
-        cp.Problem( cp.Minimize(obj), const ).solve(verbose=False)
+        cp.Problem( cp.Minimize(obj), const ).solve(solver=cp.ECOS, verbose=True)
 
     
         for i in range(K):
