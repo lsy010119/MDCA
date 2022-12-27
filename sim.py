@@ -263,6 +263,7 @@ if __name__ == "__main__":
     wp2 = np.array([[0,5], [4,1], [9,3], [15,5]])
     wp3 = np.array([[0,9], [5,6], [6,0], [15,3]])
 
+<<<<<<< Updated upstream
 
     # wp1 = np.array([[0,0], [2,1.5],[4,3],[6,5], [8,8],[10,5.5], [15,0]])
     # wp2 = np.array([[0,5], [2,3],[4,1],[7,2.2], [9,3], [10,3.5],[13,4.5],[15,5]])
@@ -273,6 +274,12 @@ if __name__ == "__main__":
     uav2 = UAV(2,wp2)
     uav3 = UAV(3,wp3)
 
+=======
+    uav1 = UAV(1,wp1)
+    uav2 = UAV(2,wp2)
+    uav3 = UAV(3,wp3)
+
+>>>>>>> Stashed changes
     UAVs = [uav1,uav2,uav3]
 
 
