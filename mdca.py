@@ -59,6 +59,7 @@ class MDCA:
                 return wp_c
     
 
+
     def check_collision_point(self):
 
         K = len(self.UAVs)                  # total number of UAVs
@@ -291,7 +292,8 @@ class MDCA:
         ''' Solve '''
         cp.Problem( cp.Minimize(obj), const ).solve(solver=cp.ECOS, verbose=True)
 
-    
+        cost = 0
+
         for i in range(K):
 
             ti_opt = t[i].value 
@@ -308,13 +310,23 @@ class MDCA:
             self.UAVs[i].del_t = ti_1 - ti_2
             self.UAVs[i].v = vi_opt
 
+            cost +=  ti_opt[-1]                      # cost = Sum of arrival time of UAVs
         
+            for j in range(K-i-1):
+
+                t_arr_i = t[i].value 
+                t_arr_j = t[i+j+1].value
+
+                cost += 100*(t_arr_i[-1] - t_arr_j[-1])**2   # cost = sum( |t_i - t_j|^2 )
+
 
 
         ''' for printing result data '''
 
         num = 0
         collision_points = self.check_collision_point()   # set of collision points
+        
+        print(f"Total Cost : {cost}")
 
         print(f"==== Time differences at collision Points ====")
 
