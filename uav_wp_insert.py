@@ -27,14 +27,10 @@ class UAV:
 
         for k in range( len(self.wp) - 1 ):
 
-            print(f"k_{self.num} : {k}")
-
             d_k = np.linalg.norm(self.wp[k+1].loc - self.wp[k].loc)
 
             self.d = np.append( self.d, d_k )            
             
-        print(f"{self.num} total d len : {len(self.d)}")
-        
 
     def calculate_trajec(self, delt):
 

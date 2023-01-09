@@ -128,7 +128,7 @@ class Simulator:
             
 
             sim = FuncAnimation(fig=fig1, func=update, frames=total_timesteps, interval=0.1) 
-            # sim.save('Senario3_simarr_MDCA.gif', fps=30, dpi=50)
+            sim.save('Senario3_simarr_MDCA_nosplited.gif', fps=30, dpi=50)
 
             traj.legend()
             plt.show()
@@ -172,8 +172,8 @@ class Simulator:
                 vel.set_ylim(self.v_min-2,self.v_max+2)
                 vel.set_xlim(0, total_timesteps*self.delt)
 
-                vel.set_title(r"$\bf UAV^{(%d)}$"%(uav.num), loc="right",fontsize=30)
-                vel.set_xlabel(r"$\bf time\;(s)$",fontsize=15)
+                vel.set_title(r"$\bf UAV^{(%d)}$"%(uav.num), loc="right",fontsize=15)
+                vel.set_xlabel(r"$\bf time\;(s)$",fontsize=10)
                 vel.set_ylabel(r"$\bf Velocity\;(m/s)$",fontsize=15)
 
 
@@ -200,8 +200,8 @@ class Simulator:
                     t_set = np.append( t_set, np.array([t_set[-1],total_timesteps*self.delt]) )
                     v_set = np.append( v_set, np.array([0,0]) )
  
-                vel.hlines(self.v_max, 0, t_set[-1], color="red", linewidth=6, linestyles='--', label=r"Max velocity")
-                vel.hlines(self.v_min, 0, t_set[-1], color="green", linewidth=6, linestyles='--', label=r"Min velocity")
+                vel.hlines(self.v_max, 0, t_set[-1], color="red", linewidth=2, linestyles='--', label=r"Max velocity")
+                vel.hlines(self.v_min, 0, t_set[-1], color="green", linewidth=2, linestyles='--', label=r"Min velocity")
                 vel.plot(t_set, v_set, color="black", linewidth=4, label=r"Velocity")
                 vel.legend(loc='lower left',prop={'size':10})
                 vel.grid()
@@ -318,8 +318,8 @@ if __name__ == "__main__":
     ### visualize ###
     Traj=True
     Reldist=False
-    Vel=False
+    Vel=True
     #################
     
-    SIM = Simulator(0.01,UAVs,1,10,3,0.1,avoidance=True,simul_arr=True,viz=[Traj,Reldist,Vel])
+    SIM = Simulator(0.01,UAVs,1,10,3,1,avoidance=True,simul_arr=True,viz=[Traj,Reldist,Vel])
     SIM.run()
