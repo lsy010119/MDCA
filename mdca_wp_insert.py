@@ -180,9 +180,14 @@ class MDCA:
 
                 ip_num = int(self.UAVs[i].d[n]/interval)
 
+                n_ = n + ip_count
+
                 for j in range(1,ip_num):
 
-                    insert_loc = (1-j/ip_num)*self.UAVs[i].wp[n+ip_count].loc + (j/ip_num)*self.UAVs[i].wp[n+1+ip_count].loc
+                    insert_loc = (1-j/ip_num)*self.UAVs[i].wp[n_].loc + (j/ip_num)*self.UAVs[i].wp[n+1+ip_count].loc
+
+                    print(f"1 : {self.UAVs[i].wp[n+ip_count].loc}")
+                    print(f"2 : {self.UAVs[i].wp[n+ip_count].loc}")
 
                     insert_point = WP(insert_loc, i)
 
@@ -206,18 +211,18 @@ class MDCA:
         # self.insert_collision_points(collision_points)        
 
 
-        # for i in range(K):
+        for i in range(K):
     
-        #     wps = np.array([0,0])
+            wps = np.array([0,0])
     
-        #     for n in range(len(self.UAVs[i].wp)):
+            for n in range(len(self.UAVs[i].wp)):
 
-        #         wps = np.vstack((wps,self.UAVs[i].wp[n].loc))
+                wps = np.vstack((wps,self.UAVs[i].wp[n].loc))
 
-        #     plt.scatter(wps[1:,0],wps[1:,1])
-        #     plt.plot(wps[1:,0],wps[1:,1])
+            plt.scatter(wps[1:,0],wps[1:,1])
+            plt.plot(wps[1:,0],wps[1:,1])
         
-        # plt.show()
+        plt.show()
 
 
         t = []                          # t = [t^1, t^2, ... , t^K]
@@ -409,6 +414,9 @@ class MDCA:
             ti_1 = ti_opt
             ti_2 = np.append(np.zeros(1) ,ti_opt[:-1] )
 
+            # print(ti_1)
+            # print(ti_2)
+
             vi_opt = d[i] / ( ti_1 - ti_2)
             
             (self.UAVs[i]).v_set = vi_opt
@@ -423,29 +431,26 @@ class MDCA:
 
         ''' for printing result data '''
 
-        for uav in self.UAVs: # for i'th drone
+        cost = 0
 
-            ti = cp.Variable( uav.N - 1 )          # t^i = [t^i_1, t^i_2, ... , t^i_{N^i-1}]
-            di = uav.d                             # d^i = [d^i_1, d^i_2, ... , d^i_{N^i-1}]
+        for i in range(K):
 
-            t.append(ti)                           # t = [t^1, t^2, ... , t^K]
-            d.append(di)                           # d = [d^1, d^2, ... , d^K]
-            N.append(uav.N)                        # N = [N^1, N^2, ... , N^K]
+            ti_opt = t[i].value 
 
-            obj +=  ti[-1]                         # cost = Sum of arrival time of UAVs
+            cost += ti_opt[-1]
 
         if simul_arr: # additional cost function : simultaneus arrival cost
 
             for i in range(K):
                 for j in range(K-i-1):
 
-                    t_arr_i = t[i] 
-                    t_arr_j = t[i+j+1]
+                    t_arr_i = t[i].value 
+                    t_arr_j = t[i+j+1].value
 
-                    obj += 100*cp.sum_squares(  (t_arr_i[-1] - t_arr_j[-1])  )   # cost = sum( |t_i - t_j|^2 )
+                    cost += 100*(  (t_arr_i[-1] - t_arr_j[-1])**2  )   # cost = sum( |t_i - t_j|^2 )
 
 
-        print(f"Total cost :")
+        print(f"Total cost : {cost}")
 
 
 
@@ -555,6 +560,6 @@ if __name__ == "__main__":
 
     uavs = [uav1,uav2,uav3]
 
-    mdca = MDCA(uavs,1,10,2)
+    mdca = MDCA(uavs,1,10,2,0.5)
 
     mdca.run()
