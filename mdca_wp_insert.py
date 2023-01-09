@@ -396,6 +396,17 @@ class MDCA:
                 # const += [ x_n <= 100 ]
 
 
+                ''' Approach #4 '''
+                # if t^i_n < t^j_m
+                a_nm = di_c/self.v_min - (dj_c-self.d_safe)/self.v_max
+
+                # if t^j_m < t^i_n
+                a_mn = dj_c/self.v_min - (di_c-self.d_safe)/self.v_max
+
+                if a_nm >= a_mn:
+                    const += [tj_m1 - ti_n1 + a_mn <= 0]
+                else:
+                    const += [ti_n1 - tj_m1 + a_nm <= 0]
 
 
         ''' Solve '''
