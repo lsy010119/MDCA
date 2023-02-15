@@ -71,12 +71,14 @@ def insert_collision_point(UAVs):
 
     input : [ UAV uav1, UAV uav2, .... UAV uavk ]
 
-    output : [ UAV uav1', UAV uav2', .... UAV uavk' ]
+    output : [ UAV uav1', UAV uav2', .... UAV uavk' ], int N_c
     '''
 
     K = len(UAVs)                  # total number of UAVs
 
     UAVs_inserted = UAVs           # copy for results
+
+    N_c = 0                        # total number of collision points
 
     for i in range(K):
 
@@ -108,7 +110,9 @@ def insert_collision_point(UAVs):
                         UAVs_inserted[i].wp.insert(ik,wpi_j)
                         UAVs_inserted[i+j+1].wp.insert(jk,wpj_i)
 
-    return UAVs_inserted
+                        N_c += 1
+
+    return UAVs_inserted, N_c
 
 
 def split_segment(UAVs,interval):

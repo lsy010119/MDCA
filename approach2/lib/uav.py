@@ -30,7 +30,18 @@ class UAV:
             d_k = np.linalg.norm(self.wp[k+1].loc - self.wp[k].loc)
 
             self.d = np.append( self.d, d_k )            
-            
+
+
+    def rearange(self):
+
+        ### recount and rearange the waypoints after insertions ###
+
+        self.N = len(self.wp)
+
+        self.calculate_dist()
+
+        for n in range(self.N): self.wp[n].idx = n
+        
 
     def calculate_trajec(self, delt):
 

@@ -8,6 +8,7 @@ from matplotlib.axes import Axes
 from lib.uav             import UAV
 from lib.waypoint        import *
 from lib.waypoint_insert import *
+from lib.admm            import ADMM
 
 
 class MDCA:
@@ -23,14 +24,30 @@ class MDCA:
 
         self.split_interval = split_interval
 
+        self.t_st = np.zeros((len(self.UAVs),1))
+
+        self.c_set = []
+
+        self.N = 0
+        self.N_c = 0
+
 
     def run(self, avoidance=True, simul_arr=True):
 
-        K = len(self.UAVs)                                          # total number of uavs
+        K = len(self.UAVs)                                            # total number of uavs
 
-        self.UAVs = insert_collision_point(self.UAVs)               # insert collision points as waypoint
+        self.UAVs, self.N_c = insert_collision_point(self.UAVs)       # insert collision points as waypoint
         
-        self.UAVs = split_segment(self.UAVs,self.split_interval)    # split segments with given interval
+        # self.UAVs = split_segment(self.UAVs,self.split_interval)      # split segments with given interval
+
+        for i in range(K):  
+            
+            self.UAVs[i].rearange()                                   # rearange the indeces of waypoints
+
+            self.N += self.UAVs[i].N                                  # count the number of waypoints
+
+
+        admm = ADMM(self.UAVs,self.v_min,self.v_max,self.d_safe,self.N,self.N_c,self.t_st)
 
 
         for i in range(K):
