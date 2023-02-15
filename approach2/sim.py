@@ -65,6 +65,7 @@ class Simulator:
         uav_pose_ymax = []
         uav_pose_xmin = []
         uav_pose_ymin = []
+        endtime       = 0
 
         for uav in self.UAVs:
 
@@ -73,6 +74,9 @@ class Simulator:
             uav_pose_ymax.append(np.max(uav.traj[1]))
             uav_pose_xmin.append(np.min(uav.traj[0]))
             uav_pose_ymin.append(np.min(uav.traj[1]))
+
+            if uav.t[-1] > endtime:
+                endtime = uav.t[-1]
 
         total_timesteps = max(t_set)
 
@@ -178,12 +182,11 @@ class Simulator:
 
                 vel = fig3.add_subplot(len(self.UAVs),1,uav.num+1)
                 vel.set_ylim(self.v_min-2,self.v_max+2)
-                vel.set_xlim(0, total_timesteps*self.delt)
+                vel.set_xlim(-1, endtime + 2)
 
                 vel.set_title(r"$\bf UAV^{(%d)}$"%(uav.num), loc="right",fontsize=15)
                 vel.set_xlabel(r"$\bf time\;(s)$",fontsize=10)
                 vel.set_ylabel(r"$\bf Velocity\;(m/s)$",fontsize=15)
-
 
                 t_set = uav.t 
                 v_set = uav.v 
@@ -201,15 +204,21 @@ class Simulator:
 
 
                 t_set = t_set[:-1]
-                t_set = np.insert(t_set,0,0)
+                t_set = np.insert(t_set,0,-1)
 
-                if t_set[-1] < total_timesteps*self.delt:
+                # if t_set[-1] < total_timesteps*self.delt:
 
-                    t_set = np.append( t_set, np.array([t_set[-1],total_timesteps*self.delt]) )
-                    v_set = np.append( v_set, np.array([0,0]) )
- 
-                vel.hlines(self.v_max, 0, t_set[-1], color="red", linewidth=2, linestyles='--', label=r"Max velocity")
-                vel.hlines(self.v_min, 0, t_set[-1], color="green", linewidth=2, linestyles='--', label=r"Min velocity")
+                t_set = np.append( t_set, np.array([t_set[-1],endtime + 2]) )
+
+                v_set = np.append( v_set, np.array([0,0]) )
+
+                v_set = np.append( np.array([0,0]), v_set )
+
+                vel.vlines(uav.t[-1], -10, 20, color="red", linewidth=1, linestyles='-', label=r"Arrival Time")
+                vel.vlines(uav.t[0], -10, 20, color="green", linewidth=1, linestyles='-', label=r"Starting Time")
+
+                vel.hlines(self.v_max, -1, t_set[-1], color="red", linewidth=2, linestyles='--', label=r"Max velocity")
+                vel.hlines(self.v_min, -1, t_set[-1], color="green", linewidth=2, linestyles='--', label=r"Min velocity")
                 vel.plot(t_set, v_set, color="black", linewidth=4, label=r"Velocity")
                 vel.legend(loc='lower left',prop={'size':10})
                 vel.grid()
@@ -324,7 +333,7 @@ if __name__ == "__main__":
 
 
     ### visualize ###
-    Traj=True
+    Traj=False
     Reldist=False
     Vel=True
     #################

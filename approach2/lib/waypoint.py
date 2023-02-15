@@ -3,11 +3,13 @@ import numpy as np
 
 class WP:
 
-    def __init__(self,id,loc,is_cp=False,collide_with=False):
+    def __init__(self,id,loc,idx=-1,is_cp=False,collide_with=False):
         
         self.id = id                        # UAV ID
 
         self.loc = loc                      # location of waypoint
+
+        self.idx = idx                      # index of the waaypoint
         
         self.is_cp = is_cp                  # is collision point
 
