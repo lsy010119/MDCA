@@ -15,7 +15,7 @@ class ADMM:
         self.v_min  = v_min
         self.v_max  = v_max
         self.d_safe = d_safe
-        self.t_safe = d_safe/v_min
+        self.t_safe = d_safe/v_max
 
         ### Numbers ###
         self.K      = len(UAVs)
@@ -32,27 +32,28 @@ class ADMM:
         self.d      = zeros((self.N-self.K,1))
         self.c_set  = c_set
         self.t_st   = t_st
-        self.p      = 10
+        self.p      = 100
 
         ### Coefficient Matrices ###
 
         # Cost function
-        self.q = zeros((self.N,1))
-        self.Q = zeros((int(self.K*(self.K-1)/2),self.N))
+        self.q      = zeros((self.N,1))
+        self.Q      = zeros((int(self.K*(self.K-1)/2),self.N))
+        self.rho    = 1000
 
         # Constraints 
-        self.S_1 = zeros((self.N-self.K,self.N))
-        self.S_2 = zeros((self.N_c,self.N))
-        self.S_3 = zeros((self.K,self.N))
+        self.S_1    = zeros((self.N-self.K,self.N))
+        self.S_2    = zeros((self.N_c,self.N))
+        self.S_3    = zeros((self.K,self.N))
 
         # Augmented Lagrangian
         
 
         ### Initializing ###
 
-        N_temp  = 0
-        N_temp2 = 0
-        N_temp3 = 0
+        N_temp      = 0
+        N_temp2     = 0
+        N_temp3     = 0
 
         # t_init, q, d, S_1, S_3, Q
         for id,uav in enumerate(UAVs):
@@ -112,7 +113,7 @@ class ADMM:
         self.x = self.S_2@self.t
 
         # P
-        self.P = self.Q.T @ self.Q
+        self.P = self.rho*self.Q.T @ self.Q + self.q@self.q.T
 
         # A
         self.A = np.block([[self.S_1],[self.S_2],[self.S_3]])
@@ -151,7 +152,9 @@ class ADMM:
 
         # r = (1/2)*( q + A.T@lam + p*A.T@(B@s+C@x-a))
 
-        r = (1/2)*( q.T + lam.T@A + p*( s.T@B.T@A + x.T@C.T@A - a.T@A ) ).T
+        # r = (1/2)*( q.T + lam.T@A + p*( s.T@B.T@A + x.T@C.T@A - a.T@A ) ).T
+
+        r = (1/2)*( lam.T@A + p*( s.T@B.T@A + x.T@C.T@A - a.T@A ) ).T
 
         self.t = -self.Rt_inv@r
 
@@ -215,6 +218,8 @@ class ADMM:
 
             idx_i, idx_j = np.where(self.S_2[i] == 1)[0][0], np.where(self.S_2[i] == -1)[0][0]
 
+            print(self.S_2@self.t)
+
             if abs(x_i) < self.t_safe and x_i >= 0:
 
                 # ti_j, tj_i = self.t[idx_i], self.t[idx_j]
@@ -260,12 +265,15 @@ class ADMM:
         for i in range(N_iter):
 
             self.update_t()
-            self.update_s()
             self.update_x()
+            self.update_s()
             self.update_lam()
 
             J = self.cost_function()
             C = self.constraints()
+
+            # print(self.t.T@self.P@self.t)
+            print(self.q.T@self.t)
 
             J_list[i] = J
 

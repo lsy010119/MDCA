@@ -77,14 +77,14 @@ class MDCA:
 
         self.UAVs, self.N_c = insert_collision_point(self.UAVs)       # insert collision points as waypoint
         
-        # self.UAVs = split_segment(self.UAVs,self.split_interval)      # split segments with given interval
+        self.UAVs = split_segment(self.UAVs,self.split_interval)      # split segments with given interval
 
         self.rearange()
 
 
         admm = ADMM(self.UAVs,self.v_min,self.v_max,self.d_safe,self.N,self.N_c,self.t_st,self.c_set)
 
-        t = admm.run(300)
+        t = admm.run(1000)
 
         # for i in range(self.K):
     

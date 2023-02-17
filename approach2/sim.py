@@ -181,7 +181,7 @@ class Simulator:
             for uav in self.UAVs:
 
                 vel = fig3.add_subplot(len(self.UAVs),1,uav.num+1)
-                vel.set_ylim(self.v_min-2,self.v_max+2)
+                vel.set_ylim(self.v_min-4,self.v_max+4)
                 vel.set_xlim(-1, endtime + 2)
 
                 vel.set_title(r"$\bf UAV^{(%d)}$"%(uav.num), loc="right",fontsize=15)
@@ -333,7 +333,7 @@ if __name__ == "__main__":
 
 
     ### visualize ###
-    Traj=False
+    Traj=True
     Reldist=False
     Vel=True
     #################
