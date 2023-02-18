@@ -13,7 +13,7 @@ from lib.admm            import ADMM
 
 class MDCA:
 
-    def __init__(self,UAVs,v_min,v_max,d_safe,split_interval):
+    def __init__(self,UAVs,v_min,v_max,d_safe,split_interval,t_st,params):
 
         self.UAVs = UAVs
 
@@ -24,8 +24,9 @@ class MDCA:
 
         self.split_interval = split_interval
 
-        self.t_st = np.zeros((len(self.UAVs),1))
-        # self.t_st = np.array([[1],[2],[0]])
+        self.t_st = t_st
+        
+        self.params = params
 
         self.c_set = []
 
@@ -62,6 +63,8 @@ class MDCA:
 
                         for wpj in UAV_j.wp:
 
+                            print(i, wpi.collide_with,loc , wpj.loc)
+
                             if np.all(loc == wpj.loc):
 
                                 collision_pair = (i,\
@@ -70,34 +73,37 @@ class MDCA:
                                                 wpj.idx)
 
                                 self.c_set.append(collision_pair)
-                    
+
+        print(self.c_set)                    
 
     def run(self, avoidance=True, simul_arr=True):
 
 
         self.UAVs, self.N_c = insert_collision_point(self.UAVs)       # insert collision points as waypoint
         
-        self.UAVs = split_segment(self.UAVs,self.split_interval)      # split segments with given interval
+        # self.UAVs = split_segment(self.UAVs,self.split_interval)      # split segments with given interval
 
         self.rearange()
 
+        # admm = ADMM(self.UAVs,self.v_min,self.v_max,self.d_safe,self.N,self.N_c,self.t_st,self.c_set,self.params)
 
-        admm = ADMM(self.UAVs,self.v_min,self.v_max,self.d_safe,self.N,self.N_c,self.t_st,self.c_set)
+        # t = admm.run(1000)
 
-        t = admm.run(1000)
-
-        # for i in range(self.K):
+        for i in range(self.K):
     
-        #     wps = np.array([0,0])
+            wps = np.array([0,0])
     
-        #     for n in range(len(self.UAVs[i].wp)):
+            for n in range(len(self.UAVs[i].wp)):
 
-        #         wps = np.vstack((wps,self.UAVs[i].wp[n].loc))
+                wps = np.vstack((wps,self.UAVs[i].wp[n].loc))
 
-        #     plt.scatter(wps[1:,0],wps[1:,1])
-        #     plt.plot(wps[1:,0],wps[1:,1])
+            plt.scatter(wps[1:,0],wps[1:,1])
+            plt.plot(wps[1:,0],wps[1:,1],label="UAV #{i}")
+            plt.scatter(wps[1,0],wps[1,1],marker='*',color='black',s=100)
         
-        # plt.show()
+        plt.legend()
+        plt.grid()
+        plt.show()
 
 
         N_temp = 0
@@ -111,7 +117,7 @@ class MDCA:
             v_i = uav.d / ( t_i[1:] - t_i_[1:] )
             
             self.UAVs[id].t = t_i
-            self.UAVs[id].del_t = t_i - t_i_
+            self.UAVs[id].del_t = t_i[1:] - t_i_[1:]
             self.UAVs[id].v = v_i
 
             N_temp += uav.N

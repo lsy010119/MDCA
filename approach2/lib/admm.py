@@ -2,11 +2,14 @@ import numpy as np
 from numpy import array,zeros,zeros_like,ones
 from numpy.linalg import inv, norm
 
+from copy import deepcopy
+import time
+
 import matplotlib.pyplot as plt
 
 class ADMM:
 
-    def __init__(self, UAVs, v_min, v_max, d_safe, N, N_c, t_st, c_set):
+    def __init__(self, UAVs, v_min, v_max, d_safe, N, N_c, t_st, c_set, params):
 
         ### UAVs ###
         self.UAVs   = UAVs
@@ -27,12 +30,19 @@ class ADMM:
         self.s      = zeros((self.N-self.K,1))
         self.x      = zeros((self.N_c,1))
         self.lam    = 10*ones((self.N+self.N_c,1))
+        self.p      = 1000
 
         ### Constants ###
         self.d      = zeros((self.N-self.K,1))
         self.c_set  = c_set
         self.t_st   = t_st
-        self.p      = 100
+
+        ### Parameters ###
+        self.param_adjthold     = params[0]
+        self.param_adjratio     = params[1]
+        self.param_stopcrit     = params[2]
+
+
 
         ### Coefficient Matrices ###
 
@@ -150,10 +160,6 @@ class ADMM:
 
         s,x,lam,A,B,C,a,p,q = self.s,self.x,self.lam,self.A,self.B,self.C,self.a,self.p,self.q
 
-        # r = (1/2)*( q + A.T@lam + p*A.T@(B@s+C@x-a))
-
-        # r = (1/2)*( q.T + lam.T@A + p*( s.T@B.T@A + x.T@C.T@A - a.T@A ) ).T
-
         r = (1/2)*( lam.T@A + p*( s.T@B.T@A + x.T@C.T@A - a.T@A ) ).T
 
         self.t = -self.Rt_inv@r
@@ -162,8 +168,6 @@ class ADMM:
     def update_s(self):
 
         t,x,lam,A,B,C,a,p,q = self.t,self.x,self.lam,self.A,self.B,self.C,self.a,self.p,self.q
-
-        # r = (1/2)*B.T@(lam + p*(A@t+C@x-a))
 
         r = (1/2)*( lam.T@B + p*( t.T@A.T@B + x.T@C.T@B - a.T@B ) ).T
 
@@ -175,8 +179,6 @@ class ADMM:
     def update_x(self):
 
         t,s,lam,A,B,C,a,p,q = self.t,self.s,self.lam,self.A,self.B,self.C,self.a,self.p,self.q
-
-        # r = -(1/2)*C.T@(lam + p*(A@t+B@s-a))
 
         r = (1/2)*( lam.T@C + p*( t.T@A.T@C + s.T@B.T@C - a.T@C ) ).T
 
@@ -190,6 +192,24 @@ class ADMM:
         t,s,x,lam,A,B,C,a,p,q = self.t,self.s,self.x,self.lam,self.A,self.B,self.C,self.a,self.p,self.q
 
         self.lam = lam + p*( A@t + B@s + C@x - a )
+
+
+    def update_p(self,t_prev,s_prev,x_prev):
+
+        t_curr,s_curr,x_curr,p_prev,A,B,C,a = self.t,self.s,self.x,self.p,self.A,self.B,self.C,self.a
+
+        C_prev = A@t_prev + B@s_prev + C@x_prev - a
+        C_curr = A@t_curr + B@s_curr + C@x_curr - a
+
+
+        if 0 < norm(C_prev) - norm(C_curr) < self.param_stopcrit*norm(C_prev):
+
+            self.p = p_prev*self.param_adjratio
+
+
+        else:
+
+            self.p = p_prev
 
 
     def proj_S(self):
@@ -207,9 +227,6 @@ class ADMM:
                 self.s[i] = self.d[i]/self.v_min - self.d[i]/self.v_max
 
 
-        # self.t = self.S_1_inv@(self.d/self.v_min - self.s)
-
-
     def proj_D(self):
 
         for i in range(self.N_c):
@@ -218,41 +235,25 @@ class ADMM:
 
             idx_i, idx_j = np.where(self.S_2[i] == 1)[0][0], np.where(self.S_2[i] == -1)[0][0]
 
-            print(self.S_2@self.t)
-
             if abs(x_i) < self.t_safe and x_i >= 0:
-
-                # ti_j, tj_i = self.t[idx_i], self.t[idx_j]
-
-                # ti_j_ = (ti_j+tj_i)/2 + self.t_safe/2
-                # tj_i_ = (ti_j+tj_i)/2 - self.t_safe/2
-
-                # self.t[idx_i], self.t[idx_j] = ti_j_, tj_i_
 
                 self.x[i] = self.t_safe
 
             elif abs(x_i) < self.t_safe and x_i < 0:
-
-                # ti_j, tj_i = self.t[idx_i], self.t[idx_j]
-
-                # ti_j_ = (ti_j+tj_i)/2 - self.t_safe/2
-                # tj_i_ = (ti_j+tj_i)/2 + self.t_safe/2
-
-                # self.t[idx_i], self.t[idx_j] = ti_j_, tj_i_
 
                 self.x[i] = -self.t_safe
 
 
     def cost_function(self):
 
-        J = (self.t.T@self.P@self.t + self.q.T@self.t)[0,0]
+        J = (self.t.T@(self.Q.T @ self.Q)@self.t + self.q.T@self.t)[0,0]
 
         return J
 
 
     def constraints(self):
 
-        C = self.A@self.t - self.a
+        C = self.A@self.t + self.B@self.s + self.C@self.x - self.a
 
         return C
 
@@ -260,22 +261,97 @@ class ADMM:
     def run(self,N_iter):
 
         J_list = np.zeros(N_iter)
-        C_list = np.zeros(N_iter)
+        S1_list = np.zeros((self.N-self.K,N_iter))
+        S2_list = np.zeros((self.N_c,N_iter))
+        S3_list = np.zeros((self.K,N_iter))
+
+        s_list = np.zeros((self.N - self.K,N_iter))
+        x_list = np.zeros((self.N_c,N_iter))
 
         for i in range(N_iter):
+
+            t_prev   = deepcopy(self.t)
+            s_prev   = deepcopy(self.s)
+            x_prev   = deepcopy(self.x)
+            lam_prev = deepcopy(self.lam)
+            J_prev   = self.cost_function()
+
 
             self.update_t()
             self.update_x()
             self.update_s()
             self.update_lam()
+            self.update_p(t_prev,s_prev,x_prev)
 
             J = self.cost_function()
             C = self.constraints()
 
-            # print(self.t.T@self.P@self.t)
-            print(self.q.T@self.t)
+            J_list[i]       = J
+            S1_list[:,i]    = C[:self.N-self.K,0]
+            S2_list[:,i]    = C[self.N-self.K:self.N-self.K + self.N_c,0]
+            S3_list[:,i]    = C[-self.K:,0]
+            s_list[:,i]     = self.s[:,0]
+            x_list[:,i]     = self.x[:,0]
 
-            J_list[i] = J
+            if 0 < norm(J_prev) - norm(J) < self.param_stopcrit*norm(J_prev):
+
+                print("converged")
+
+                break
+
+
+        J_list = J_list[:i]
+        S1_list = S1_list[:,:i]
+        S2_list = S2_list[:,:i]
+        S3_list = S3_list[:,:i]
+        s_list = s_list[:,:i]
+        x_list = x_list[:,:i]
+        
+
+        print((self.t.T@(self.Q.T @ self.Q)@self.t + self.q.T@self.t)[0,0])
+        print(self.Q@self.t)
+        print(self.S_1@self.t)
+        print(self.S_2@self.t)
+        print(self.t)
+
+        # fig1 = plt.figure(figsize=(30,10))
+        # fig2 = plt.figure(figsize=(15,5))
+        # fig3 = plt.figure(figsize=(15,5))
+        
+        # costplot = fig1.add_subplot(1,1,1)
+        # constplot1 = fig2.add_subplot(1,1,1)
+        # constplot2 = fig3.add_subplot(1,1,1)
+
+        # costplot.plot(np.arange(i),J_list,label=r'Cost : $\sum^{K}_{i=1}t^{(i)}_{N^{(i)}}+\rho \sum^{K}_{i,j}\sum^{K}_{i\neq j} (t^{(i)}_{N^{(i)}} - t^{(j)}_{N^{(j)}} )^2$')
+        # costplot.set_xlim(0,i)
+        # costplot.set_xlabel('Iterations')
+
+        # constplot1.plot(np.arange(i),S1_list.T,color='red')
+        # constplot1.plot(0,0,color='red',label=r"Equality Constraints #1 : $S_1t+s-d/V_{\min}$")
+        # constplot1.plot(np.arange(i),S2_list.T,color='green')
+        # constplot1.plot(0,0,color='green',label=r"Equality Constraints #2 : $S_2t-x$")
+        # constplot1.plot(np.arange(i),S3_list.T,color='blue')
+        # constplot1.plot(0,0,color='blue',label=r"Equality Constraints #3 : $S_3t-t_{\rm safety}$")
+        # constplot1.set_xlim(0,i)
+        # constplot1.set_ylim(-0.6,0.6)
+        # constplot1.set_xlabel('Iterations')
+        
+        # constplot2.plot(np.arange(i),x_list.T,label=r'$t^{(i)}_j - t^{(j)}_i$')
+        # constplot2.hlines(self.t_safe,0,i,linestyles='--',colors='blue',linewidth=1,label=r'$t_{\rm safety}$')
+        # constplot2.hlines(-self.t_safe,0,i,linestyles='--',colors='blue',linewidth=1)
+        # constplot2.axhspan(self.t_safe, 0.6, xmin=0, xmax=i, alpha=0.06, color='blue')
+        # constplot2.axhspan(-self.t_safe, -0.6, xmin=0, xmax=i, alpha=0.06, color='blue')
+        # constplot2.text(i/2,self.t_safe+0.1,r"Feasible Area $D$",fontsize=15, alpha=0.1,color='blue')
+        # constplot2.set_xlim(0,i)
+        # constplot2.set_ylim(-0.6,0.6)
+        # constplot2.set_xlabel('Iterations')
+        # constplot2.set_ylabel('Time differences')
+
+        # costplot.legend()
+        # plt.show()
+
+
 
         return self.t
         
+

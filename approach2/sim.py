@@ -27,8 +27,8 @@ class Simulator:
 
     '''
 
-    def __init__(self, delt, UAVs, v_min, v_max, d_safe, split_interval, \
-                 avoidance=True, simul_arr=True, viz = [True,True,True]):
+    def __init__(self, delt, UAVs, v_min, v_max, d_safe, split_interval, t_st, \
+                 avoidance=True, simul_arr=True, viz = [True,True,True],params = [1e-3,1.5,1e-3]):
         
         ### Environment ###
 
@@ -43,7 +43,7 @@ class Simulator:
         self.split_interval = split_interval    # segment split interval
 
         ### MDCA Initialize ###
-        self.mdca = MDCA(UAVs,v_min,v_max,d_safe,split_interval)
+        self.mdca = MDCA(UAVs,v_min,v_max,d_safe,split_interval,t_st,params)
 
         ### UAVs ###
         self.UAVs = UAVs                        # list of UAVs
@@ -140,7 +140,7 @@ class Simulator:
             
 
             sim = FuncAnimation(fig=fig1, func=update, frames=total_timesteps, interval=0.1) 
-            # sim.save('Senario3_simarr_MDCA_nosplited.gif', fps=30, dpi=50)
+            # sim.save('Senario3_app2.gif', fps=30, dpi=100)
 
             traj.legend()
             plt.show()
@@ -279,26 +279,39 @@ if __name__ == "__main__":
 
 
     '''senario #3'''
-    wp1 = np.array([[0,0], [6,5], [8,8], [15,0]])
-    wp1 = multiple_insert(wp1,0)
-    uav1 = UAV(0,wp1)
+    # wp1 = np.array([[0,0], [6,5], [8,8], [15,0]])
+    # wp1 = multiple_insert(wp1,0)
+    # uav1 = UAV(0,wp1)
 
-    wp2 = np.array([[0,5], [4,1], [9,3], [15,5]])
-    wp2 = multiple_insert(wp2,1)
-    uav2 = UAV(1,wp2)
+    # # wp2 = np.array([[0,5], [4,1], [9,3], [15,5]])
+    # wp2 = np.array([ [15,5], [9,3], [4,1], [0,5]])
+    # wp2 = multiple_insert(wp2,1)
+    # uav2 = UAV(1,wp2)
     
-    wp3 = np.array([[0,9], [5,6], [6,0], [15,3]])
-    wp3 = multiple_insert(wp3,2)
-    uav3 = UAV(2,wp3)
+    # # wp3 = np.array([[0,9], [5,6], [6,0], [15,3]])
+    # wp3 = np.array([ [15,3], [6,0], [5,6], [0,9]])
+    # wp3 = multiple_insert(wp3,2)
+    # uav3 = UAV(2,wp3)
 
-    UAVs = [uav1,uav2,uav3]
+    # UAVs = [uav1,uav2,uav3]
 
 
     '''senario #4'''
     # wp1 = np.array([[0,0], [2,0.5], [3,1], [5,4], [6,6], [8,7.5], [10,8], [12,8.2]])
+    # wp1 = multiple_insert(wp1,0)
+    # uav1 = UAV(0,wp1)
+
     # wp2 = np.array([[0,3], [4,2], [5,1.5], [6,1.5], [7,2], [8,3], [12,6]])
+    # wp2 = multiple_insert(wp2,1)
+    # uav2 = UAV(0,wp2)    
+    
     # wp3 = np.array([[0,9], [4,6], [8,1], [10,0.5], [12,1]])
+    # wp3 = multiple_insert(wp3,2)
+    # uav3 = UAV(0,wp3)
+        
     # wp4 = np.array([[0,6], [4,4], [10,2], [12,2]])
+    # wp4 = multiple_insert(wp4,3)
+    # uav4 = UAV(0,wp4)
 
     # uav1 = UAV(1,wp1)
     # uav2 = UAV(2,wp2)
@@ -310,33 +323,59 @@ if __name__ == "__main__":
 
     '''senario #5'''
     # wp1 = np.array([[0,0], [2,2], [4,4], [6,6]])
-    # wp2 = np.array([[3,6], [3,4], [3,2], [3,0]])
-    # wp3 = np.array([[0,6], [2,4], [4,2], [6,0]])
+    # wp1 = multiple_insert(wp1,0)
+    # uav1 = UAV(0,wp1)
 
-    # uav1 = UAV(1,wp1)
-    # uav2 = UAV(2,wp2)
-    # uav3 = UAV(3,wp3)
+    # wp2 = np.array([[3,6], [3,4], [3,2], [3,0]])
+    # wp2 = multiple_insert(wp2,1)
+    # uav2 = UAV(1,wp2)
+
+    # wp3 = np.array([[0,6], [2,4], [4,2], [6,0]])
+    # wp3 = multiple_insert(wp3,2)
+    # uav3 = UAV(2,wp3)
+
 
     # UAVs = [uav1,uav2,uav3]
 
 
     '''senario #6'''
-    # wp1 = np.array([[0,0], [2,2], [4,4], [6,6]])
-    # wp2 = np.array([[0,3], [3,2], [4,1], [6,0]])
-    # wp3 = np.array([[0,8], [3,5], [6,2]])
+    wp1 = np.array([[0,0], [2,2], [4,4], [6,6]])
+    wp1 = multiple_insert(wp1,0)
+    uav1 = UAV(0,wp1)
 
-    # uav1 = UAV(1,wp1)
-    # uav2 = UAV(2,wp2)
-    # uav3 = UAV(3,wp3)
+    wp2 = np.array([[0,3], [3,2], [4,1], [6,0]])
+    wp2 = multiple_insert(wp2,1)
+    uav2 = UAV(1,wp2)
 
-    # UAVs = [uav1,uav2,uav3]
+    wp3 = np.array([[0,8], [3,5], [6,2]])
+    wp3 = multiple_insert(wp3,2)
+    uav3 = UAV(2,wp3)
+
+
+    UAVs = [uav1,uav2,uav3]
+
 
 
     ### visualize ###
-    Traj=True
+    Traj=False
     Reldist=False
-    Vel=True
+    Vel=False
     #################
     
-    SIM = Simulator(0.01,UAVs,1,10,3,1,avoidance=True,simul_arr=True,viz=[Traj,Reldist,Vel])
+    ### input parameters ###
+    delt            = 0.01
+    v_min           = 1
+    v_max           = 10
+    d_safe          = 3
+    split_interval  = 1
+    t_st            = np.array([[0],[0],[0]])
+    avoidance       = True
+    simul_arr       = True
+    param_adjthold  = 1e-1
+    param_adjratio  = 1
+    param_stopcrit  = 1e-5
+
+    SIM = Simulator(delt,UAVs,v_min,v_max,d_safe,split_interval,t_st,\
+                    avoidance=True,simul_arr=True,viz=[Traj,Reldist,Vel],\
+                    params=[param_adjthold,param_adjratio,param_stopcrit])
     SIM.run()

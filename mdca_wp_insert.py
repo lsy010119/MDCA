@@ -1,7 +1,4 @@
 
-from cmath import inf
-import struct
-from matplotlib import projections
 import numpy as np
 import cvxpy as cp
 
@@ -186,9 +183,6 @@ class MDCA:
 
                     insert_loc = (1-j/ip_num)*self.UAVs[i].wp[n_].loc + (j/ip_num)*self.UAVs[i].wp[n+1+ip_count].loc
 
-                    print(f"1 : {self.UAVs[i].wp[n+ip_count].loc}")
-                    print(f"2 : {self.UAVs[i].wp[n+ip_count].loc}")
-
                     insert_point = WP(insert_loc, i)
 
                     self.UAVs[i].wp.insert(n+1+ip_count,insert_point)
@@ -206,23 +200,23 @@ class MDCA:
 
         self.split_segment(self.split_interval)
 
-        # collision_points = self.check_collision_point()
+        collision_points = self.check_collision_point()
 
         # self.insert_collision_points(collision_points)        
 
 
-        for i in range(K):
+        # for i in range(K):
     
-            wps = np.array([0,0])
+        #     wps = np.array([0,0])
     
-            for n in range(len(self.UAVs[i].wp)):
+        #     for n in range(len(self.UAVs[i].wp)):
 
-                wps = np.vstack((wps,self.UAVs[i].wp[n].loc))
+        #         wps = np.vstack((wps,self.UAVs[i].wp[n].loc))
 
-            plt.scatter(wps[1:,0],wps[1:,1])
-            plt.plot(wps[1:,0],wps[1:,1])
+        #     plt.scatter(wps[1:,0],wps[1:,1])
+        #     plt.plot(wps[1:,0],wps[1:,1])
         
-        plt.show()
+        # plt.show()
 
 
         t = []                          # t = [t^1, t^2, ... , t^K]
@@ -390,28 +384,6 @@ class MDCA:
 
                     const += [ t_safety + (ti_c - tj_c) <= 0 ]
 
-
-                ''' Approach #3 '''
-                # x_n = cp.Variable(1)
-
-                # x.append(x_n)
-
-                # const += [ cp.abs(ti_c - tj_c) <= (2**0.5)*x_n ]
-                # const += [ t_safety - x_n <= 0 ]
-                # const += [ x_n <= 100 ]
-
-
-                ''' Approach #4 '''
-                # if t^i_n < t^j_m
-                a_nm = di_c/self.v_min - (dj_c-self.d_safe)/self.v_max
-
-                # if t^j_m < t^i_n
-                a_mn = dj_c/self.v_min - (di_c-self.d_safe)/self.v_max
-
-                if a_nm >= a_mn:
-                    const += [tj_m1 - ti_n1 + a_mn <= 0]
-                else:
-                    const += [ti_n1 - tj_m1 + a_nm <= 0]
 
 
         ''' Solve '''
